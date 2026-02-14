@@ -1,0 +1,16 @@
+# Dataset videos (download via data/download_script.py)
+data/original_sequences/
+data/manipulated_sequences/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
