@@ -1,4 +1,4 @@
-# deepfake_project_comp6341
+# Deepfake Project - COMP6341
 
 ## Dataset Setup
 
@@ -44,3 +44,29 @@ python download-FaceForensics.py \
 ```
 
 This downloads ~38GB instead of ~500GB
+
+### EfficientNet-B1 Usage using timm from Pytorch
+```
+# Install
+pip install timm torch torchvision
+
+# Load pretrained EfficientNet-B1
+import timm
+import torch.nn as nn
+
+# Create model with ImageNet pretrained weights
+model = timm.create_model('efficientnet_b1', pretrained=True, num_classes=2)
+
+# Or for more control:
+model = timm.create_model(
+    'efficientnet_b1', 
+    pretrained=True, 
+    num_classes=2,
+    drop_rate=0.2,        # Dropout rate
+    drop_path_rate=0.2    # Stochastic depth
+)
+
+# Model info
+print(f"Parameters: {sum(p.numel() for p in model.parameters())/1e6:.2f}M")
+# Output: Parameters: 7.79M
+```
