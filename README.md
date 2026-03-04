@@ -33,3 +33,14 @@ DATA_DIR = os.path.join("data")
 REAL_VIDEOS = os.path.join(DATA_DIR, "original_sequences", "actors", "c23", "videos")
 FAKE_VIDEOS = os.path.join(DATA_DIR, "manipulated_sequences", "DeepFakeDetection", "c23", "videos")
 ```
+
+### Download  ONLY c23 compression level
+```
+python download-FaceForensics.py \
+    /path/to/output/directory \
+    -d FaceForensics++ \
+    -c c23 \
+    -t videos
+```
+
+This downloads ~38GB instead of ~500GB
