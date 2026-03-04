@@ -2,7 +2,7 @@
 
 ## Dataset Setup
 
-The dataset (FaceForensics++) is not stored in the repository due to its size. Each collaborator must download it locally.
+The dataset (FaceForensics++) is not stored in the repository due to its size. We will instead use the c23 compressed version (see download instructions below).
 
 ### Download
 
