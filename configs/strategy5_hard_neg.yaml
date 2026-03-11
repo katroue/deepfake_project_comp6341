@@ -1,0 +1,48 @@
+# Strategy 5: Hard Negative Mining Configuration
+
+strategy_name: "Hard Negative Mining"
+strategy_description: "Identify and oversample difficult examples"
+
+# Data
+data_root: "data/"
+compression: "c40"
+
+# Model
+model: "efficientnet_b1"
+num_classes: 2
+pretrained: true
+dropout: 0.3
+
+# Training
+batch_size: 32
+num_epochs: 20
+learning_rate: 0.0001
+weight_decay: 0.0001
+num_workers: 6
+
+# Augmentation
+augmentation: "baseline"  # minimal
+
+# Hard Negative Mining
+hard_negative_mining:
+  enabled: true
+  start_epoch: 5  # Start mining after warmup
+  mining_frequency: 5  # Re-mine every 5 epochs
+  confidence_threshold: 0.3  # Samples with confidence < 0.3 are "hard"
+  hard_sample_ratio: 0.5  # 50% of batches should be hard samples
+  mining_dataset: "validation"  # Mine from val set to avoid overfitting
+  
+  # Adaptive threshold over time
+  threshold_schedule:
+    epoch_5: 0.5
+    epoch_10: 0.4
+    epoch_15: 0.3
+    epoch_20: 0.2
+
+# Paths
+save_dir: "results/models/strategy5_hard_neg"
+log_dir: "results/logs"
+hard_negatives_dir: "results/models/strategy5_hard_neg/hard_negatives"
+
+# Device
+device: "auto"  # auto-detect MPS/CUDA/CPU
