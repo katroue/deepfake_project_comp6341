@@ -6,7 +6,7 @@ import os
 
 class BaseTrainer:
     """
-    Base trainer class for all strategies
+    Base trainer class for all 6 strategies
     """
     
     def __init__(self, model, train_loader, val_loader, 
