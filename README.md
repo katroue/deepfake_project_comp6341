@@ -34,18 +34,40 @@ REAL_VIDEOS = os.path.join(DATA_DIR, "original_sequences", "actors", "c23", "vid
 FAKE_VIDEOS = os.path.join(DATA_DIR, "manipulated_sequences", "DeepFakeDetection", "c23", "videos")
 ```
 
-### Download  ONLY c23 compression level
+### Download ONLY c23 compression level
 ```
-python download-FaceForensics.py \
-    /path/to/output/directory \
-    -d FaceForensics++ \
-    -c c23 \
-    -t videos
+python scripts/download_script.py data -d all -c c23 -t videos --server EU2
 ```
 
 This downloads ~38GB instead of ~500GB
 
-### EfficientNet-B1 Usage using timm from Pytorch
+### Download ONLY c40 compression level
+```
+python scripts/download_script.py data -d all -c c40 -t videos --server EU2
+```
+
+Or using the FaceForensics download script directly:
+```
+python download-FaceForensics.py \
+    /path/to/output/directory \
+    -d FaceForensics++ \
+    -c c40 \
+    -t videos
+```
+
+This will populate:
+```
+data/
+├── download_script.py
+├── original_sequences/       # Real videos
+│   └── actors/c40/videos/
+└── manipulated_sequences/    # Deepfake videos
+    └── DeepFakeDetection/c40/videos/
+```
+
+c40 is more heavily compressed than c23, resulting in a smaller download (~10GB).
+
+### EfficientNet-B1 Usage using timm from Pytorch (see src\models\efficientnet.py)
 ```
 # Install
 pip install timm torch torchvision

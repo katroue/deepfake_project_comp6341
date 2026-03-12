@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import sys; print\\(sys.prefix\\)\")",
+      "Bash(conda info:*)",
+      "Bash(where python:*)",
+      "Bash(where python3:*)",
+      "Bash(where pip:*)"
+    ]
+  }
+}
