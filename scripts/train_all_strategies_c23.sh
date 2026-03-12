@@ -1,10 +1,10 @@
 #!/bin/bash
-# Train all 6 strategies on c40 compression sequentially
+# Train all 6 strategies on c23 compression sequentially
 
-export CONFIG_DIR="configs/c40"
+export CONFIG_DIR="configs/c23"
 
 echo "========================================="
-echo "Training All Strategies (c40)"
+echo "Training All Strategies (c23)"
 echo "========================================="
 
 echo "Training Strategy 1: Baseline"
@@ -26,5 +26,5 @@ echo "Training Strategy 6: Multi-Task"
 python -m src.training.train_multitask
 
 echo "========================================="
-echo "All c40 strategies trained!"
+echo "All c23 strategies trained!"
 echo "========================================="

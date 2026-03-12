@@ -124,7 +124,7 @@ def validate(model, loader, criterion_binary, criterion_multi,
 
 
 def main():
-    with open('configs/strategy6_multitask.yaml', 'r') as f:
+    with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy6_multitask.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     device = get_device()

@@ -13,7 +13,7 @@ from src.utils.device import get_device
 
 def main():
     # Load config
-    with open('configs/strategy1_baseline.yaml', 'r') as f:
+    with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy1_baseline.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     # Device

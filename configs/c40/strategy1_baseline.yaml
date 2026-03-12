@@ -25,7 +25,7 @@ augmentation: "baseline"  # minimal
 
 # Paths
 save_dir: "results/models/c40/strategy1_baseline"
-log_dir: "results/logs"
+log_dir: "results/logs/c40"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

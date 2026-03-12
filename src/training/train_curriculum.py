@@ -96,7 +96,7 @@ class CurriculumTrainer(BaseTrainer):
 
 
 def main():
-    with open('configs/strategy3_curriculum.yaml', 'r') as f:
+    with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy3_curriculum.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     device = get_device()

@@ -5,7 +5,7 @@ strategy_description: "Identify and oversample difficult examples"
 
 # Data
 data_root: "data/"
-compression: "c40"
+compression: "c23"
 
 # Model
 model: "efficientnet_b1"
@@ -40,8 +40,8 @@ hard_negative_mining:
     epoch_20: 0.2
 
 # Paths
-save_dir: "results/models/c40/strategy5_hard_neg"
-log_dir: "results/logs"
+save_dir: "results/models/c23/strategy5_hard_neg"
+log_dir: "results/logs/c23"
 hard_negatives_dir: "results/models/strategy5_hard_neg/hard_negatives"
 
 # Device

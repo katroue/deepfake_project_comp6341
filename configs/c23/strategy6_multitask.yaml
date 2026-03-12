@@ -5,7 +5,7 @@ strategy_description: "Joint training: binary (real/fake) + manipulation type"
 
 # Data
 data_root: "data/"
-compression: "c40"
+compression: "c23"
 
 # Model
 model: "multitask_efficientnet_b1"
@@ -41,8 +41,8 @@ tasks:
     loss: "CrossEntropyLoss"
 
 # Paths
-save_dir: "results/models/c40/strategy6_multitask"
-log_dir: "results/logs"
+save_dir: "results/models/c23/strategy6_multitask"
+log_dir: "results/logs/c23"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

@@ -59,7 +59,7 @@ def build_weighted_sampler(confidences, hard_sample_ratio, threshold):
 
 
 def main():
-    with open('configs/strategy5_hard_neg.yaml', 'r') as f:
+    with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy5_hard_neg.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     device = get_device()

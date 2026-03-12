@@ -41,7 +41,7 @@ hard_negative_mining:
 
 # Paths
 save_dir: "results/models/c40/strategy5_hard_neg"
-log_dir: "results/logs"
+log_dir: "results/logs/c40"
 hard_negatives_dir: "results/models/strategy5_hard_neg/hard_negatives"
 
 # Device

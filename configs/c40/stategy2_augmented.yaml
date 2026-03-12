@@ -43,7 +43,7 @@ augmentation_params:
 
 # Paths
 save_dir: "results/models/c40/strategy2_augmented"
-log_dir: "results/logs"
+log_dir: "results/logs/c40"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

@@ -5,7 +5,7 @@ strategy_description: "Standard fine-tuning with minimal augmentation"
 
 # Data
 data_root: "data/"
-compression: "c40"
+compression: "c23"
 
 # Model
 model: "efficientnet_b1"
@@ -24,8 +24,8 @@ num_workers: 6
 augmentation: "baseline"  # minimal
 
 # Paths
-save_dir: "results/models/c40/strategy1_baseline"
-log_dir: "results/logs"
+save_dir: "results/models/c23/strategy1_baseline"
+log_dir: "results/logs/c23"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

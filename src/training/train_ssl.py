@@ -267,7 +267,7 @@ def finetune(config, pretrained_path, device):
 
 
 def main():
-    with open('configs/strategy4_ssl.yaml', 'r') as f:
+    with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy4_ssl.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     device = get_device()

@@ -5,7 +5,7 @@ strategy_description: "Extensive geometric and color transformations"
 
 # Data
 data_root: "data/"
-compression: "c40"
+compression: "c23"
 
 # Model
 model: "efficientnet_b1"
@@ -42,8 +42,8 @@ augmentation_params:
     scale: [0.02, 0.1]
 
 # Paths
-save_dir: "results/models/c40/strategy2_augmented"
-log_dir: "results/logs"
+save_dir: "results/models/c23/strategy2_augmented"
+log_dir: "results/logs/c23"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

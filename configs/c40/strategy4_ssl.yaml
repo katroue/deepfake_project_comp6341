@@ -40,7 +40,7 @@ phase_2:
 
 # Paths
 save_dir: "results/models/c40/strategy4_ssl"
-log_dir: "results/logs"
+log_dir: "results/logs/c40"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

@@ -13,7 +13,7 @@ from src.utils.device import get_device
 
 def main():
     # Load config (note: typo in filename is intentional)
-    with open('configs/stategy2_augmented.yaml', 'r') as f:
+    with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/stategy2_augmented.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     device = get_device()

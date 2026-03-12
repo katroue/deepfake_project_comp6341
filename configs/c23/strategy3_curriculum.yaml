@@ -5,7 +5,7 @@ strategy_description: "Progressive difficulty training: easy to hard manipulatio
 
 # Data
 data_root: "data/"
-compression: "c40"
+compression: "c23"
 
 # Model
 model: "efficientnet_b1"
@@ -39,8 +39,8 @@ curriculum:
     manipulations: ["Face2Face", "FaceSwap", "Deepfakes", "NeuralTextures"]
 
 # Paths
-save_dir: "results/models/c40/strategy3_curriculum"
-log_dir: "results/logs"
+save_dir: "results/models/c23/strategy3_curriculum"
+log_dir: "results/logs/c23"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU
