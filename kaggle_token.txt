@@ -1,0 +1,4 @@
+api token = 'KGAT_0bc64b65183a3341d7f6dc57d5d5f518'
+
+KAGGLE_API_TOKEN environment variable = 'export KAGGLE_API_TOKEN=KGAT_0bc64b65183a3341d7f6dc57d5d5f518'
+
