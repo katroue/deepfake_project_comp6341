@@ -11,7 +11,7 @@ STRATEGIES=(
     "strategy6_multitask"
 )
 
-TRAIN_COMPRESSIONS=("c40" "c23")
+TRAIN_COMPRESSIONS=("c40") # add c23 when is it done training
 EVAL_COMPRESSIONS=("c40" "c23")
 
 echo "========================================="

@@ -51,13 +51,17 @@ def evaluate_model(model, dataloader, device, is_multitask=False):
     all_probs = np.array(all_probs)
 
     # Overall metrics
-    cm = confusion_matrix(all_labels, all_preds)
+    cm = confusion_matrix(all_labels, all_preds, labels=[0, 1])
+    try:
+        auc = float(roc_auc_score(all_labels, all_probs))
+    except ValueError:
+        auc = float('nan')
     metrics = {
         'accuracy':  float(accuracy_score(all_labels, all_preds)),
         'precision': float(precision_score(all_labels, all_preds, zero_division=0)),
         'recall':    float(recall_score(all_labels, all_preds, zero_division=0)),
         'f1':        float(f1_score(all_labels, all_preds, zero_division=0)),
-        'auc':       float(roc_auc_score(all_labels, all_probs)),
+        'auc':       auc,
         'confusion_matrix': cm.tolist(),
         'tn': int(cm[0, 0]),
         'fp': int(cm[0, 1]),

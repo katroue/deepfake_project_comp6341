@@ -42,7 +42,7 @@ hard_negative_mining:
 # Paths
 save_dir: "results/models/c23/strategy5_hard_neg"
 log_dir: "results/logs/c23"
-hard_negatives_dir: "results/models/strategy5_hard_neg/hard_negatives"
+hard_negatives_dir: "results/models/c23/strategy5_hard_neg/hard_negatives"
 
 # Device
 device: "auto"  # auto-detect MPS/CUDA/CPU

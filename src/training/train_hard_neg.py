@@ -148,6 +148,8 @@ def main():
 
         scheduler.step(val_acc)
 
+        trainer.log_epoch(epoch, train_loss, train_acc, val_loss, val_acc)
+
         print(f"\nEpoch {epoch+1} Summary:")
         print(f"  Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
         print(f"  Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc:.2f}%")
@@ -156,6 +158,9 @@ def main():
         if is_best:
             trainer.best_val_acc = val_acc
         trainer.save_checkpoint(epoch, is_best)
+
+        if trainer.check_early_stop(val_acc):
+            break
 
     total_time = time.time() - start_time
     print(f"\n{'='*60}")

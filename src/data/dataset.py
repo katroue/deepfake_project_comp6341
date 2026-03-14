@@ -53,20 +53,27 @@ class FaceForensicsDataset(Dataset):
                         ))
         
         # Fake images (label=1)
+        # Manipulated sequences use paired IDs (e.g. "000_003") so we match
+        # any directory whose name starts with the source video ID.
         for manip in manipulations:
+            images_root = os.path.join(
+                self.data_root, 'manipulated_sequences',
+                manip, self.compression, 'images'
+            )
+            if not os.path.exists(images_root):
+                continue
+            paired_dirs = os.listdir(images_root)
             for vid_id in video_ids:
-                frame_dir = os.path.join(
-                    self.data_root, 'manipulated_sequences',
-                    manip, self.compression, 'images', vid_id
-                )
-                if os.path.exists(frame_dir):
-                    for frame in os.listdir(frame_dir):
-                        if frame.endswith('.jpg'):
-                            self.samples.append((
-                                os.path.join(frame_dir, frame),
-                                1,  # Fake
-                                manip
-                            ))
+                for paired in paired_dirs:
+                    if paired.startswith(vid_id + '_') or paired == vid_id:
+                        frame_dir = os.path.join(images_root, paired)
+                        for frame in os.listdir(frame_dir):
+                            if frame.endswith('.jpg'):
+                                self.samples.append((
+                                    os.path.join(frame_dir, frame),
+                                    1,  # Fake
+                                    manip
+                                ))
     
     def __len__(self):
         return len(self.samples)

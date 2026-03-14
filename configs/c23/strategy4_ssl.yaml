@@ -17,9 +17,9 @@ dropout: 0.3
 phase_1:
   enabled: true
   method: "SimCLR"  # Contrastive learning
-  data_root: "data/youtube_faces/"  # Unlabeled faces
+  data_root: "data/"  # Uses FF++ faces (labels ignored in contrastive pretraining)
   num_epochs: 10
-  batch_size: 256
+  batch_size: 64
   learning_rate: 0.001
   temperature: 0.5
   projection_dim: 128
@@ -29,7 +29,7 @@ phase_1:
 phase_2:
   enabled: true
   load_pretrained: true
-  pretrained_path: "results/models/strategy4_ssl/phase1_pretrained/best_model.pth"
+  pretrained_path: "results/models/c23/strategy4_ssl/phase1_pretrained/best_model.pth"
   num_epochs: 20
   batch_size: 32
   learning_rate: 0.0001
