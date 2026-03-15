@@ -20,7 +20,9 @@
       "Bash(chmod -R u+r /Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/data/manipulated_sequences/NeuralTextures/c23/images && echo \"done\")",
       "Bash(chmod -R u+r /Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/data/manipulated_sequences/FaceSwap/c23/images && echo \"done\")",
       "Bash(chmod -R u+r /Users/katherinedemers/kaggle_upload/ff_dataset2 && ls ~/kaggle_upload/ff_dataset2/)",
-      "Bash(git ls-files:*)"
+      "Bash(git ls-files:*)",
+      "Bash(git rm:*)",
+      "Bash(git count-objects:*)"
     ]
   }
 }
