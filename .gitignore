@@ -11,6 +11,14 @@ build/
 .venv/
 venv/
 
+# Model checkpoints and results
+results/models/
+results/logs/
+
+# Kaggle
+kaggle_token.txt
+~/kaggle_upload/
+
 # OS
 .DS_Store
 Thumbs.db
