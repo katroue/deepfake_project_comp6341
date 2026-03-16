@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import yaml
 import os
+import argparse
 
 from src.models.efficientnet import EfficientNetB1
 from src.data.dataset import FaceForensicsDataset
@@ -12,6 +13,11 @@ from src.training.base_trainer import BaseTrainer
 from src.utils.device import get_device
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resume', type=str, default=None,
+                        help='Path to checkpoint to resume from (e.g. results/models/c23/strategy1_baseline/last_model.pth)')
+    args = parser.parse_args()
+
     # Load config
     with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy1_baseline.yaml', 'r') as f:
         config = yaml.safe_load(f)
@@ -90,8 +96,11 @@ def main():
         config=config
     )
     
-    # Train
-    trainer.train(num_epochs=config['num_epochs'])
+    # Train (optionally resume from checkpoint)
+    start_epoch = 0
+    if args.resume:
+        start_epoch = trainer.load_checkpoint(args.resume)
+    trainer.train(num_epochs=config['num_epochs'], start_epoch=start_epoch)
 
 if __name__ == '__main__':
     main()

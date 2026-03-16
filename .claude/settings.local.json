@@ -22,7 +22,8 @@
       "Bash(chmod -R u+r /Users/katherinedemers/kaggle_upload/ff_dataset2 && ls ~/kaggle_upload/ff_dataset2/)",
       "Bash(git ls-files:*)",
       "Bash(git rm:*)",
-      "Bash(git count-objects:*)"
+      "Bash(git count-objects:*)",
+      "Bash(python3:*)"
     ]
   }
 }

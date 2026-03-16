@@ -10,6 +10,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, WeightedRandomSampler
 import yaml
 import os
+import argparse
 import numpy as np
 from tqdm import tqdm
 
@@ -59,6 +60,11 @@ def build_weighted_sampler(confidences, hard_sample_ratio, threshold):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resume', type=str, default=None,
+                        help='Path to checkpoint to resume from')
+    args = parser.parse_args()
+
     with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy5_hard_neg.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
@@ -112,6 +118,10 @@ def main():
         device=device, config=config
     )
 
+    resume_epoch = 0
+    if args.resume:
+        resume_epoch = trainer.load_checkpoint(args.resume)
+
     print(f"\n{'='*60}")
     print(f"Training {config['strategy_name']} (Hard Negative Mining)")
     print(f"{'='*60}\n")
@@ -119,7 +129,7 @@ def main():
     import time
     start_time = time.time()
 
-    for epoch in range(config['num_epochs']):
+    for epoch in range(resume_epoch, config['num_epochs']):
         # Update threshold from schedule
         threshold = threshold_schedule.get(epoch + 1, base_threshold)
 
@@ -154,13 +164,14 @@ def main():
         print(f"  Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
         print(f"  Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc:.2f}%")
 
+        # Early stopping (must check before updating best_val_acc)
+        if trainer.check_early_stop(val_acc):
+            break
+
         is_best = val_acc > trainer.best_val_acc
         if is_best:
             trainer.best_val_acc = val_acc
         trainer.save_checkpoint(epoch, is_best)
-
-        if trainer.check_early_stop(val_acc):
-            break
 
     total_time = time.time() - start_time
     print(f"\n{'='*60}")

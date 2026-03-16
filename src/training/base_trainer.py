@@ -137,15 +137,26 @@ class BaseTrainer:
             torch.save(checkpoint, save_path)
             print(f'✅ Saved best model with accuracy: {self.val_accuracies[-1]:.2f}%')
     
-    def train(self, num_epochs):
+    def load_checkpoint(self, checkpoint_path):
+        """Resume training from a checkpoint. Returns the next epoch to train."""
+        checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        self.best_val_acc = checkpoint['val_acc']
+        start_epoch = checkpoint['epoch'] + 1
+        print(f"Resumed from {checkpoint_path} (epoch {checkpoint['epoch']+1}, val_acc {checkpoint['val_acc']:.2f}%)")
+        return start_epoch
+
+    def train(self, num_epochs, start_epoch=0):
         """Main training loop"""
         print(f"\n{'='*60}")
         print(f"Training {self.config['strategy_name']}")
         print(f"{'='*60}\n")
-        
+
         start_time = time.time()
-        
-        for epoch in range(num_epochs):
+
+        for epoch in range(start_epoch, num_epochs):
             print(f"\nEpoch {epoch+1}/{num_epochs}")
             print("-" * 40)
             
@@ -170,15 +181,15 @@ class BaseTrainer:
             print(f"  Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
             print(f"  Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc:.2f}%")
 
+            # Early stopping (must check before updating best_val_acc)
+            if self.check_early_stop(val_acc):
+                break
+
             # Save checkpoint
             is_best = val_acc > self.best_val_acc
             if is_best:
                 self.best_val_acc = val_acc
             self.save_checkpoint(epoch, is_best)
-
-            # Early stopping
-            if self.check_early_stop(val_acc):
-                break
         
         total_time = time.time() - start_time
         print(f"\n{'='*60}")

@@ -19,7 +19,7 @@ phase_1:
   method: "SimCLR"  # Contrastive learning
   data_root: "data/"  # Uses FF++ faces (labels ignored in contrastive pretraining)
   num_epochs: 10
-  batch_size: 64
+  batch_size: 32
   learning_rate: 0.001
   temperature: 0.5
   projection_dim: 128
@@ -34,7 +34,7 @@ phase_2:
   batch_size: 32
   learning_rate: 0.0001
   weight_decay: 0.0001
-  num_workers: 6
+  num_workers: 4
   augmentation: "baseline"
   freeze_backbone_epochs: 3  # Freeze first 3 epochs
 

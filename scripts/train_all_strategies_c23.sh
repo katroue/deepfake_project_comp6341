@@ -28,3 +28,7 @@ python -m src.training.train_multitask
 echo "========================================="
 echo "All c23 strategies trained!"
 echo "========================================="
+
+# To resume training baseline strategy, run:
+CONFIG_DIR=configs/c23 python -m src.training.train_baseline \
+    --resume results/models/c23/strategy1_baseline/last_model.pth

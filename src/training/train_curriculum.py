@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import yaml
 import os
+import argparse
 
 from src.models.efficientnet import EfficientNetB1
 from src.data.dataset import FaceForensicsDataset
@@ -33,7 +34,7 @@ class CurriculumTrainer(BaseTrainer):
                 active = cfg['manipulations']
         return active
 
-    def train(self, num_epochs):
+    def train(self, num_epochs, start_epoch=0):
         print(f"\n{'='*60}")
         print(f"Training {self.config['strategy_name']} (Curriculum Learning)")
         print(f"{'='*60}\n")
@@ -41,7 +42,7 @@ class CurriculumTrainer(BaseTrainer):
         import time
         start_time = time.time()
 
-        for epoch in range(num_epochs):
+        for epoch in range(start_epoch, num_epochs):
             # Update dataset manipulations based on curriculum
             manipulations = self._get_manipulations_for_epoch(epoch)
             print(f"\nEpoch {epoch+1}/{num_epochs} — Manipulations: {manipulations}")
@@ -79,13 +80,14 @@ class CurriculumTrainer(BaseTrainer):
             print(f"  Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
             print(f"  Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc:.2f}%")
 
+            # Early stopping (must check before updating best_val_acc)
+            if self.check_early_stop(val_acc):
+                break
+
             is_best = val_acc > self.best_val_acc
             if is_best:
                 self.best_val_acc = val_acc
             self.save_checkpoint(epoch, is_best)
-
-            if self.check_early_stop(val_acc):
-                break
 
         total_time = time.time() - start_time
         print(f"\n{'='*60}")
@@ -96,6 +98,11 @@ class CurriculumTrainer(BaseTrainer):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resume', type=str, default=None,
+                        help='Path to checkpoint to resume from')
+    args = parser.parse_args()
+
     with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy3_curriculum.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
@@ -150,7 +157,10 @@ def main():
         config=config
     )
 
-    trainer.train(num_epochs=config['num_epochs'])
+    start_epoch = 0
+    if args.resume:
+        start_epoch = trainer.load_checkpoint(args.resume)
+    trainer.train(num_epochs=config['num_epochs'], start_epoch=start_epoch)
 
 if __name__ == '__main__':
     main()

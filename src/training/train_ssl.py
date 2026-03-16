@@ -11,6 +11,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import yaml
 import os
+import argparse
 from PIL import Image
 from tqdm import tqdm
 
@@ -152,7 +153,7 @@ def pretrain_simclr(config, device):
     return checkpoint_path
 
 
-def finetune(config, pretrained_path, device):
+def finetune(config, pretrained_path, device, resume_checkpoint=None):
     """Phase 2: Supervised fine-tuning with pretrained backbone."""
     phase2 = config['phase_2']
     if not phase2.get('enabled', True):
@@ -224,14 +225,18 @@ def finetune(config, pretrained_path, device):
         config=ft_config
     )
 
-    # Optionally freeze backbone for first N epochs
-    if freeze_epochs > 0:
+    start_epoch = 0
+    if resume_checkpoint:
+        start_epoch = trainer.load_checkpoint(resume_checkpoint)
+
+    # Optionally freeze backbone for first N epochs (skip if already past freeze period)
+    if freeze_epochs > 0 and start_epoch < freeze_epochs:
         print(f"Freezing backbone for first {freeze_epochs} epochs...")
         for name, param in model.model.named_parameters():
             if 'classifier' not in name:
                 param.requires_grad = False
 
-    for epoch in range(phase2['num_epochs']):
+    for epoch in range(start_epoch, phase2['num_epochs']):
         if epoch == freeze_epochs and freeze_epochs > 0:
             print("Unfreezing backbone...")
             for param in model.parameters():
@@ -255,26 +260,34 @@ def finetune(config, pretrained_path, device):
         print(f"  Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.2f}%")
         print(f"  Val Loss:   {val_loss:.4f} | Val Acc:   {val_acc:.2f}%")
 
+        if trainer.check_early_stop(val_acc):
+            break
+
         is_best = val_acc > trainer.best_val_acc
         if is_best:
             trainer.best_val_acc = val_acc
         trainer.save_checkpoint(epoch, is_best)
 
-        if trainer.check_early_stop(val_acc):
-            break
-
     print(f"\nBest Val Acc: {trainer.best_val_acc:.2f}%")
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resume', type=str, default=None,
+                        help='Path to Phase 2 checkpoint to resume from (skips Phase 1)')
+    args = parser.parse_args()
+
     with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy4_ssl.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
     device = get_device()
     print(f"Using device: {device}")
 
-    pretrained_path = pretrain_simclr(config, device)
-    finetune(config, pretrained_path, device)
+    if args.resume:
+        pretrained_path = config['phase_2'].get('pretrained_path')
+    else:
+        pretrained_path = pretrain_simclr(config, device)
+    finetune(config, pretrained_path, device, resume_checkpoint=args.resume)
 
 if __name__ == '__main__':
     main()

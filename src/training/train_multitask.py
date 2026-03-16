@@ -4,6 +4,7 @@ Strategy 6: Multi-Task Learning
 Jointly trains binary (real/fake) and manipulation-type classification heads
 on a shared EfficientNet-B1 backbone.
 """
+import argparse
 import csv
 import torch
 import torch.nn as nn
@@ -124,6 +125,11 @@ def validate(model, loader, criterion_binary, criterion_multi,
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resume', type=str, default=None,
+                        help='Path to checkpoint to resume from')
+    args = parser.parse_args()
+
     with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy6_multitask.yaml', 'r') as f:
         config = yaml.safe_load(f)
 
@@ -176,16 +182,30 @@ def main():
     best_val_acc = 0.0
     epochs_no_improve = 0
     early_stopping_patience = config.get('early_stopping_patience', 5)
+    start_epoch = 0
+
+    if args.resume:
+        checkpoint = torch.load(args.resume, map_location=device, weights_only=False)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if 'scheduler_state_dict' in checkpoint:
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        best_val_acc = checkpoint['val_bin_acc']
+        start_epoch = checkpoint['epoch'] + 1
+        print(f"Resumed from {args.resume} (epoch {checkpoint['epoch']+1}, val_bin_acc {checkpoint['val_bin_acc']:.2f}%)")
+
     start_time = time.time()
 
     log_dir = config.get('log_dir', 'results/logs')
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, 'multi-task_learning.csv')
-    with open(log_path, 'w', newline='') as f:
-        csv.writer(f).writerow(['epoch', 'train_loss', 'train_bin_acc', 'train_multi_acc',
-                                'val_loss', 'val_bin_acc', 'val_multi_acc'])
+    log_mode = 'a' if args.resume else 'w'
+    with open(log_path, log_mode, newline='') as f:
+        if not args.resume:
+            csv.writer(f).writerow(['epoch', 'train_loss', 'train_bin_acc', 'train_multi_acc',
+                                    'val_loss', 'val_bin_acc', 'val_multi_acc'])
 
-    for epoch in range(config['num_epochs']):
+    for epoch in range(start_epoch, config['num_epochs']):
         print(f"\nEpoch {epoch+1}/{config['num_epochs']}")
         print("-" * 40)
 
@@ -220,6 +240,7 @@ def main():
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict(),
             'val_bin_acc': val_bin_acc,
             'val_multi_acc': val_multi_acc,
             'config': config
