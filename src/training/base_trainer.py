@@ -32,8 +32,9 @@ class BaseTrainer:
         os.makedirs(log_dir, exist_ok=True)
         strategy_name = config.get('strategy_name', 'unknown').replace(' ', '_').lower()
         self.log_path = os.path.join(log_dir, f'{strategy_name}.csv')
-        with open(self.log_path, 'w', newline='') as f:
-            csv.writer(f).writerow(['epoch', 'train_loss', 'train_acc', 'val_loss', 'val_acc'])
+        if not os.path.exists(self.log_path):
+            with open(self.log_path, 'w', newline='') as f:
+                csv.writer(f).writerow(['epoch', 'train_loss', 'train_acc', 'val_loss', 'val_acc'])
 
     def check_early_stop(self, val_acc) -> bool:
         """Update counter and return True if training should stop."""
