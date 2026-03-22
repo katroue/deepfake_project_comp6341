@@ -71,7 +71,7 @@ Identical architecture and training loop to Strategy 1, but applies aggressive d
 | Random erasing | p=0.3, scale=(0.02, 0.1) |
 
 ### Hypothesis
-Deepfake detectors are known to overfit to low-level compression artefacts. Aggressive augmentation forces the model to rely on higher-level semantic cues, improving generalisation to unseen manipulations.
+Deepfake detectors are known to overfit to low-level compression artefacts (pixel-level statistical anomalies introduced by the deepfake generation process that are not related to the semantic content of the image). Aggressive augmentation forces the model to rely on higher-level semantic cues, improving generalisation to unseen manipulations.
 
 ---
 
@@ -103,7 +103,7 @@ Progressively expands the training distribution from easy, visually distinct man
 At the start of each epoch, `CurriculumTrainer` rebuilds the training `DataLoader` to include only the manipulation types allowed in the current phase. The model first learns to distinguish the most visually obvious fake type (Face2Face), then incrementally adds harder examples.
 
 ### What to expect
-Val accuracy will appear low or declining during phases 1–3 because the val set includes manipulation types the model has not yet seen. Meaningful val accuracy is only interpretable after phase 4 begins (epoch 17+).
+Val accuracy will appear low or declining during phases 1–3 because the val set includes manipulation types the model has not yet seen. Meaningful val accuracy is only interpretable after phase 4 begins (epoch 17+), which is why early stopping is disabled.
 
 ### Hypothesis
 Presenting easy examples first allows the model to form robust low-level features before being exposed to harder, more subtle manipulations — analogous to how humans learn.
