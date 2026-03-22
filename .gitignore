@@ -13,7 +13,8 @@ venv/
 
 # Model checkpoints and results
 results/models/
-results/logs/
+results/logs/**
+!results/logs/**/*.csv
 
 # Kaggle
 kaggle_token.txt
