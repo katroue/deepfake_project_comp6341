@@ -146,9 +146,13 @@ def pretrain_simclr(config, device):
         avg_loss = total_loss / len(loader)
         print(f"SSL Epoch {epoch+1}: Loss = {avg_loss:.4f}")
 
-    # Save pretrained backbone weights
-    checkpoint_path = os.path.join(save_dir, 'best_model.pth')
-    torch.save({'backbone_state_dict': backbone.state_dict()}, checkpoint_path)
+        # Save checkpoint after every epoch so work survives session timeout
+        checkpoint_path = os.path.join(save_dir, 'best_model.pth')
+        torch.save({'backbone_state_dict': backbone.state_dict()}, checkpoint_path)
+        if os.path.exists('/kaggle/output'):
+            import shutil
+            shutil.copytree(save_dir, '/kaggle/output/results/models/c23/strategy4_ssl/phase1_pretrained', dirs_exist_ok=True)
+
     print(f"Saved SSL pretrained backbone to {checkpoint_path}")
     return checkpoint_path
 
@@ -269,6 +273,11 @@ def finetune(config, pretrained_path, device, resume_checkpoint=None):
         if is_best:
             trainer.best_val_acc = val_acc
         trainer.save_checkpoint(epoch, is_best)
+
+        # Sync to /kaggle/output/ after every checkpoint so work survives session timeout
+        if os.path.exists('/kaggle/output'):
+            import shutil
+            shutil.copytree(config['save_dir'], f"/kaggle/output/results/models/c23/strategy4_ssl", dirs_exist_ok=True)
 
     print(f"\nBest Val Acc: {trainer.best_val_acc:.2f}%")
 
