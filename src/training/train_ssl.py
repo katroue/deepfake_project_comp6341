@@ -203,7 +203,9 @@ def finetune(config, pretrained_path, device, resume_checkpoint=None):
     print(f"Model parameters: {model.get_num_parameters()/1e6:.2f}M")
 
     freeze_epochs = phase2.get('freeze_backbone_epochs', 0)
-    criterion = nn.CrossEntropyLoss()
+    class_weight_real = phase2.get('class_weight_real', 1.0)
+    weight = torch.tensor([class_weight_real, 1.0]).to(device)
+    criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = optim.AdamW(model.parameters(), lr=phase2['learning_rate'],
                             weight_decay=phase2['weight_decay'])
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(

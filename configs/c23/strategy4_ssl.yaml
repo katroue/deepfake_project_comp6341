@@ -18,7 +18,7 @@ phase_1:
   enabled: true
   method: "SimCLR"  # Contrastive learning
   data_root: "data/"  # Uses FF++ faces (labels ignored in contrastive pretraining)
-  num_epochs: 10
+  num_epochs: 50
   batch_size: 32
   learning_rate: 0.001
   temperature: 0.5
@@ -36,7 +36,8 @@ phase_2:
   weight_decay: 0.0001
   num_workers: 4
   augmentation: "baseline"
-  freeze_backbone_epochs: 3  # Freeze first 3 epochs
+  freeze_backbone_epochs: 0
+  class_weight_real: 3.64  # 27581 fake / 7587 real — prevents collapse to all-fake
 
 # Paths
 save_dir: "results/models/c23/strategy4_ssl"
