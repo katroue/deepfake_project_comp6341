@@ -1,13 +1,14 @@
 """
-Strategy 4: Self-Supervised Learning (SimCLR)
+Strategy 4: Self-Supervised Learning (SimSiam)
 
-Phase 1: Contrastive pretraining on all face images (real + fake, no labels)
+Phase 1: SimSiam pretraining on all face images (real + fake, no labels)
 Phase 2: Supervised fine-tuning on FF++ with pretrained backbone
 """
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader, Dataset
 import yaml
 import os
@@ -41,54 +42,57 @@ class ContrastivePairDataset(Dataset):
         return view1, view2
 
 
-class SimCLRProjectionHead(nn.Module):
-    def __init__(self, in_dim, proj_dim=128):
+class SimSiamProjectionHead(nn.Module):
+    """3-layer MLP projector with BN (no affine on final BN, per SimSiam paper)."""
+    def __init__(self, in_dim, proj_dim=512):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(in_dim, in_dim),
-            nn.ReLU(),
-            nn.Linear(in_dim, proj_dim)
+            nn.Linear(in_dim, proj_dim, bias=False),
+            nn.BatchNorm1d(proj_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(proj_dim, proj_dim, bias=False),
+            nn.BatchNorm1d(proj_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(proj_dim, proj_dim, bias=False),
+            nn.BatchNorm1d(proj_dim, affine=False),
         )
 
     def forward(self, x):
         return self.net(x)
 
 
-class NTXentLoss(nn.Module):
-    def __init__(self, temperature=0.5):
+class SimSiamPredictorHead(nn.Module):
+    """2-layer MLP predictor."""
+    def __init__(self, proj_dim=512, pred_dim=128):
         super().__init__()
-        self.temperature = temperature
+        self.net = nn.Sequential(
+            nn.Linear(proj_dim, pred_dim, bias=False),
+            nn.BatchNorm1d(pred_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(pred_dim, proj_dim),
+        )
 
-    def forward(self, z1, z2):
-        batch_size = z1.shape[0]
-        z1 = F.normalize(z1, dim=1)
-        z2 = F.normalize(z2, dim=1)
-        z = torch.cat([z1, z2], dim=0)  # (2N, D)
-
-        sim = torch.mm(z, z.t()) / self.temperature  # (2N, 2N)
-        # Mask out self-similarity
-        mask = torch.eye(2 * batch_size, device=z.device).bool()
-        sim.masked_fill_(mask, float('-inf'))
-
-        # Positive pairs: (i, i+N) and (i+N, i)
-        targets = torch.cat([
-            torch.arange(batch_size, 2 * batch_size),
-            torch.arange(batch_size)
-        ]).to(z.device)
-
-        loss = F.cross_entropy(sim, targets)
-        return loss
+    def forward(self, x):
+        return self.net(x)
 
 
-def pretrain_simclr(config, device):
-    """Phase 1: SimCLR contrastive pretraining."""
+def simsiam_loss(p, z):
+    """Negative cosine similarity with stop-gradient on z."""
+    z = z.detach()
+    p = F.normalize(p, dim=1)
+    z = F.normalize(z, dim=1)
+    return -(p * z).sum(dim=1).mean()
+
+
+def pretrain_simsiam(config, device, resume_checkpoint=None):
+    """Phase 1: SimSiam self-supervised pretraining."""
     phase1 = config['phase_1']
     if not phase1.get('enabled', True):
         print("Phase 1 (SSL pretraining) disabled, skipping.")
         return None
 
     print("\n" + "="*60)
-    print("Phase 1: SimCLR Contrastive Pretraining")
+    print("Phase 1: SimSiam Self-Supervised Pretraining")
     print("="*60)
 
     save_dir = os.path.join(config['save_dir'], 'phase1_pretrained')
@@ -99,7 +103,7 @@ def pretrain_simclr(config, device):
         data_root=config['data_root'],
         split='train',
         compression=config['compression'],
-        transform=None  # transforms applied in ContrastivePairDataset
+        transform=None
     )
     ssl_transform = get_ssl_transforms()
     pair_dataset = ContrastivePairDataset(base_dataset, ssl_transform)
@@ -108,47 +112,82 @@ def pretrain_simclr(config, device):
         batch_size=phase1['batch_size'],
         shuffle=True,
         num_workers=config.get('num_workers', 4),
-        pin_memory=False,
+        pin_memory=(device.type == 'cuda'),
         drop_last=True
     )
 
-    # Backbone (no classifier)
+    # Backbone (no classifier) + projector + predictor
     backbone = timm.create_model('efficientnet_b1', pretrained=False, num_classes=0, global_pool='avg')
     feat_dim = backbone.num_features
-    projection_head = SimCLRProjectionHead(feat_dim, proj_dim=phase1['projection_dim'])
+    proj_dim = phase1['projection_dim']
+    pred_dim = phase1['pred_dim']
+    projector = SimSiamProjectionHead(feat_dim, proj_dim=proj_dim)
+    predictor = SimSiamPredictorHead(proj_dim=proj_dim, pred_dim=pred_dim)
 
     backbone = backbone.to(device)
-    projection_head = projection_head.to(device)
+    projector = projector.to(device)
+    predictor = predictor.to(device)
 
     optimizer = optim.Adam(
-        list(backbone.parameters()) + list(projection_head.parameters()),
+        list(backbone.parameters()) + list(projector.parameters()) + list(predictor.parameters()),
         lr=phase1['learning_rate']
     )
-    criterion = NTXentLoss(temperature=phase1['temperature'])
+    scaler = GradScaler(device=device.type, enabled=(device.type == 'cuda'))
 
-    for epoch in range(phase1['num_epochs']):
+    start_epoch = 0
+    if resume_checkpoint and os.path.exists(resume_checkpoint):
+        ckpt = torch.load(resume_checkpoint, map_location=device, weights_only=False)
+        backbone.load_state_dict(ckpt['backbone_state_dict'])
+        projector.load_state_dict(ckpt['projector_state_dict'])
+        predictor.load_state_dict(ckpt['predictor_state_dict'])
+        optimizer.load_state_dict(ckpt['optimizer_state_dict'])
+        start_epoch = ckpt['epoch'] + 1
+        print(f"Resumed Phase 1 from epoch {ckpt['epoch'] + 1} (loss={ckpt.get('loss', '?'):.4f})")
+
+    for epoch in range(start_epoch, phase1['num_epochs']):
         backbone.train()
-        projection_head.train()
+        projector.train()
+        predictor.train()
         total_loss = 0.0
 
         pbar = tqdm(loader, desc=f"SSL Epoch {epoch+1}/{phase1['num_epochs']}")
         for view1, view2 in pbar:
             view1, view2 = view1.to(device), view2.to(device)
             optimizer.zero_grad()
-            z1 = projection_head(backbone(view1))
-            z2 = projection_head(backbone(view2))
-            loss = criterion(z1, z2)
-            loss.backward()
-            optimizer.step()
+            with autocast(device_type=device.type, enabled=(device.type == 'cuda')):
+                z1 = projector(backbone(view1))
+                z2 = projector(backbone(view2))
+                p1 = predictor(z1)
+                p2 = predictor(z2)
+                loss = simsiam_loss(p1, z2) / 2 + simsiam_loss(p2, z1) / 2
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(
+                list(backbone.parameters()) + list(projector.parameters()) + list(predictor.parameters()),
+                max_norm=1.0
+            )
+            scaler.step(optimizer)
+            scaler.update()
             total_loss += loss.item()
             pbar.set_postfix({'loss': f'{loss.item():.4f}'})
 
         avg_loss = total_loss / len(loader)
         print(f"SSL Epoch {epoch+1}: Loss = {avg_loss:.4f}")
 
-        # Save checkpoint after every epoch so work survives session timeout
+        # Save full resumable checkpoint after every epoch
+        resume_path = os.path.join(save_dir, 'phase1_resume.pth')
+        torch.save({
+            'epoch': epoch,
+            'loss': avg_loss,
+            'backbone_state_dict': backbone.state_dict(),
+            'projector_state_dict': projector.state_dict(),
+            'predictor_state_dict': predictor.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+        }, resume_path)
+        # Save backbone-only checkpoint for Phase 2
         checkpoint_path = os.path.join(save_dir, 'best_model.pth')
         torch.save({'backbone_state_dict': backbone.state_dict()}, checkpoint_path)
+        print(f"Checkpoints saved (resume: {resume_path})")
         if os.path.exists('/kaggle/output'):
             import shutil
             shutil.copytree(save_dir, '/kaggle/output/results/models/c23/strategy4_ssl/phase1_pretrained', dirs_exist_ok=True)
@@ -183,9 +222,9 @@ def finetune(config, pretrained_path, device, resume_checkpoint=None):
         transform=get_val_transforms()
     )
     train_loader = DataLoader(train_dataset, batch_size=phase2['batch_size'],
-                              shuffle=True, num_workers=phase2['num_workers'], pin_memory=False)
+                              shuffle=True, num_workers=phase2['num_workers'], pin_memory=(device.type == 'cuda'))
     val_loader = DataLoader(val_dataset, batch_size=phase2['batch_size'],
-                            shuffle=False, num_workers=phase2['num_workers'], pin_memory=False)
+                            shuffle=False, num_workers=phase2['num_workers'], pin_memory=(device.type == 'cuda'))
 
     print(f"Train samples: {len(train_dataset)}")
     print(f"Val samples: {len(val_dataset)}")
@@ -286,6 +325,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--resume', type=str, default=None,
                         help='Path to Phase 2 checkpoint to resume from (skips Phase 1)')
+    parser.add_argument('--resume-phase1', type=str, default=None,
+                        help='Path to Phase 1 resume checkpoint (phase1_resume.pth) to continue SSL pretraining')
     args = parser.parse_args()
 
     with open(os.environ.get('CONFIG_DIR', 'configs/c40') + '/strategy4_ssl.yaml', 'r') as f:
@@ -297,7 +338,7 @@ def main():
     if args.resume:
         pretrained_path = config['phase_2'].get('pretrained_path')
     else:
-        pretrained_path = pretrain_simclr(config, device)
+        pretrained_path = pretrain_simsiam(config, device, resume_checkpoint=args.resume_phase1)
     finetune(config, pretrained_path, device, resume_checkpoint=args.resume)
 
 if __name__ == '__main__':

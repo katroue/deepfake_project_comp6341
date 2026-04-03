@@ -110,47 +110,48 @@ Presenting easy examples first allows the model to form robust low-level feature
 
 ---
 
-## Strategy 4 — Self-Supervised Learning (SimCLR)
+## Strategy 4 — Self-Supervised Learning (SimSiam)
 
 **File:** `src/training/train_ssl.py`
 **Config:** `configs/c23/strategy4_ssl.yaml`
 
 ### Description
-Two-phase training. Phase 1 uses contrastive self-supervised learning (SimCLR) to pretrain a backbone on all face images without labels. Phase 2 fine-tunes the pretrained backbone on the labelled FF++ dataset.
+Two-phase training. Phase 1 uses SimSiam self-supervised learning to pretrain a backbone on all face images without labels. Phase 2 fine-tunes the pretrained backbone on the labelled FF++ dataset.
 
-### Phase 1 — SimCLR Contrastive Pretraining
+### Phase 1 — SimSiam Self-Supervised Pretraining
 
 | Parameter | Value |
 |---|---|
-| Method | SimCLR (NT-Xent loss) |
+| Method | SimSiam (negative cosine similarity + stop-gradient) |
 | Backbone | EfficientNet-B1 (no classifier, trained from scratch) |
-| Projection head | 2-layer MLP → 128-dim |
-| Temperature | 0.5 |
-| Epochs | 10 |
-| Batch size | 32 |
+| Projector | 3-layer MLP with BN → 512-dim |
+| Predictor | 2-layer MLP → 128-dim hidden → 512-dim out |
+| Epochs | 20 |
+| Batch size | 96 |
 | Learning rate | 0.001 |
-| Augmentation | Strong (SimCLR-style: crop, flip, colour jitter, grayscale, blur) |
+| Augmentation | Strong (flip, colour jitter, grayscale, blur) |
 
-For each image, two randomly augmented views are generated. The model is trained to maximise agreement between the two views of the same image (positive pair) while pushing apart views from different images (negative pairs) using the NT-Xent loss.
+For each image, two randomly augmented views are generated. The online network (backbone + projector + predictor) predicts the target network's representation (backbone + projector with stop-gradient) of the other view. No negative pairs are used — collapse is prevented by the stop-gradient and the asymmetric predictor head. Loss ranges from −1 (perfect alignment) to 0 (random).
+
+### Why SimSiam over SimCLR
+SimCLR's NT-Xent loss requires large batches (256–8192) for enough negative pairs to learn a useful signal. On MPS-constrained hardware (max ~96 batch size), SimCLR plateaued immediately and produced a near-random backbone. SimSiam does not use negative pairs, so it works well at any batch size.
 
 ### Phase 2 — Supervised Fine-Tuning
 
 | Parameter | Value |
 |---|---|
-| Backbone init | Phase 1 pretrained weights (506 layers loaded) |
-| Freeze backbone | First 3 epochs (classifier head only) |
+| Backbone init | Phase 1 pretrained weights |
 | Epochs | 20 |
-| Batch size | 32 |
+| Batch size | 64 |
 | Learning rate | 0.0001 |
+| Weight decay | 0.0001 |
+| Class weight (real) | 3.64 (compensates for 78% fake imbalance) |
 | Augmentation | Baseline |
 
-The pretrained backbone is loaded and a 2-class classifier head is attached. For the first 3 epochs only the head is trained; after that all layers are unfrozen and trained end-to-end.
-
-### Note on Phase 2 train vs val accuracy
-During the frozen epochs (1–3), val accuracy can exceed train accuracy. This is because train accuracy is averaged over the full epoch (including early batches where the head is less trained), while validation runs on the fully-updated model after each epoch.
+The pretrained backbone is loaded and a 2-class classifier head is attached. All layers are trained end-to-end from epoch 1.
 
 ### Hypothesis
-SSL pretraining forces the model to learn general, label-agnostic face representations. These representations may be more robust to manipulation artefacts than supervised ImageNet features, because the model learns to understand faces rather than object categories.
+SSL pretraining forces the model to learn general, label-agnostic face representations. These representations may be more robust to manipulation artefacts than supervised ImageNet features, because the model learns to understand faces rather than object categories. SimSiam is chosen over SimCLR because it does not require large batch sizes to produce a useful signal.
 
 ---
 
@@ -243,6 +244,6 @@ Forcing the model to simultaneously identify *which* manipulation technique was 
 | 1 — Baseline | Standard fine-tuning | ImageNet | Minimal |
 | 2 — Heavy Augmentation | Robustness via transforms | ImageNet | Heavy |
 | 3 — Curriculum Learning | Easy → hard manipulation schedule | ImageNet | Minimal |
-| 4 — SSL (SimCLR) | Self-supervised face representations | None (scratch) | Strong (Phase 1) |
+| 4 — SSL (SimSiam) | Self-supervised face representations | None (scratch) | Strong (Phase 1) |
 | 5 — Hard Negative Mining | Oversample difficult examples | ImageNet | Minimal |
 | 6 — Multi-Task Learning | Auxiliary manipulation-type task | ImageNet | Minimal |

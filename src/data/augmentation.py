@@ -53,7 +53,7 @@ def get_ssl_transforms(input_size=240):
         ], p=0.8),
         transforms.RandomGrayscale(p=0.2),
         transforms.RandomApply([
-            transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0))
+            transforms.GaussianBlur(kernel_size=9, sigma=(0.1, 2.0))
         ], p=0.5),
         transforms.ToTensor(),
         transforms.Normalize(

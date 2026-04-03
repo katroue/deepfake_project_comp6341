@@ -24,7 +24,14 @@
       "Bash(git rm:*)",
       "Bash(git count-objects:*)",
       "Bash(python3:*)",
-      "Bash(source /Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/activate)"
+      "Bash(source /Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/activate)",
+      "Bash(python:*)",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport json\ntrain = json.load\\(open\\('data/splits/train.json'\\)\\)\nprint\\('train entries:', len\\(train\\)\\)\nprint\\('sample:', train[:2]\\)\n\")",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport sys; sys.path.insert\\(0, '.'\\)\nfrom src.data.dataset import FaceForensicsDataset\nds = FaceForensicsDataset\\('data/', split='train', compression='c23'\\)\nprint\\('train samples:', len\\(ds\\)\\)\n\")",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport torch\nprint\\('PyTorch version:', torch.__version__\\)\nprint\\('CUDA available:', torch.cuda.is_available\\(\\)\\)\nprint\\('MPS available:', torch.backends.mps.is_available\\(\\)\\)\n\")",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nfrom src.training.base_trainer import BaseTrainer\nfrom src.training.train_ssl import pretrain_simclr\nprint\\('Imports OK'\\)\n\")",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"from src.training.train_ssl import pretrain_simsiam, finetune; print\\('OK'\\)\")",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport torch\nimport torch.nn as nn\n\ndevice = torch.device\\('mps'\\)\nbn = nn.BatchNorm1d\\(512, affine=False\\).to\\(device\\)\nx = torch.randn\\(96, 512\\).to\\(device\\)\ntry:\n    out = bn\\(x\\)\n    print\\('BatchNorm1d\\(affine=False\\) on MPS: OK'\\)\nexcept Exception as e:\n    print\\('ERROR:', e\\)\n\")"
     ]
   }
 }

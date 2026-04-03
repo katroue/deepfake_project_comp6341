@@ -1,5 +1,6 @@
 import csv
 import torch
+from torch.amp import GradScaler, autocast
 from tqdm import tqdm
 import time
 import os
@@ -26,6 +27,8 @@ class BaseTrainer:
         self.best_val_acc = 0.0
         self.early_stopping_patience = config.get('early_stopping_patience', 5)
         self._epochs_no_improve = 0
+        self.use_amp = device.type == 'cuda'
+        self.scaler = GradScaler(device=device.type, enabled=(device.type == 'cuda'))
 
         # CSV log setup
         log_dir = config.get('log_dir', 'results/logs')
@@ -68,12 +71,14 @@ class BaseTrainer:
             
             # Forward pass
             self.optimizer.zero_grad()
-            outputs = self.model(images)
-            loss = self.criterion(outputs, labels)
-            
+            with autocast(device_type=self.device.type, enabled=self.use_amp):
+                outputs = self.model(images)
+                loss = self.criterion(outputs, labels)
+
             # Backward pass
-            loss.backward()
-            self.optimizer.step()
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
             
             # Statistics
             running_loss += loss.item()
@@ -103,9 +108,10 @@ class BaseTrainer:
             for images, labels, _ in tqdm(self.val_loader, desc='Validation'):
                 images = images.to(self.device)
                 labels = labels.to(self.device)
-                
-                outputs = self.model(images)
-                loss = self.criterion(outputs, labels)
+
+                with autocast(device_type=self.device.type, enabled=self.use_amp):
+                    outputs = self.model(images)
+                    loss = self.criterion(outputs, labels)
                 
                 running_loss += loss.item()
                 _, predicted = outputs.max(1)

@@ -16,14 +16,14 @@ dropout: 0.3
 # Phase 1: Self-Supervised Pretraining
 phase_1:
   enabled: true
-  method: "SimCLR"  # Contrastive learning
-  data_root: "data/"  # Uses FF++ faces (labels ignored in contrastive pretraining)
-  num_epochs: 50
-  batch_size: 32
+  method: "SimSiam"
+  data_root: "data/"  # Uses FF++ faces (labels ignored in SSL pretraining)
+  num_epochs: 20
+  batch_size: 64
   learning_rate: 0.001
-  temperature: 0.5
-  projection_dim: 128
-  augmentation: "strong"  # Strong augmentation for contrastive learning
+  projection_dim: 512
+  pred_dim: 128
+  augmentation: "strong"
 
 # Phase 2: Supervised Fine-tuning
 phase_2:
@@ -31,10 +31,10 @@ phase_2:
   load_pretrained: true
   pretrained_path: "results/models/c23/strategy4_ssl/phase1_pretrained/best_model.pth"
   num_epochs: 20
-  batch_size: 32
+  batch_size: 64
   learning_rate: 0.0001
   weight_decay: 0.0001
-  num_workers: 4
+  num_workers: 8
   augmentation: "baseline"
   freeze_backbone_epochs: 0
   class_weight_real: 3.64  # 27581 fake / 7587 real — prevents collapse to all-fake

@@ -16,7 +16,7 @@ python -m src.training.train_augmented
 echo "Training Strategy 3: Curriculum Learning"
 python -m src.training.train_curriculum
 
-echo "Training Strategy 4: Self-Supervised"
+echo "Training Strategy 4: Self-Supervised (SimSiam)"
 python -m src.training.train_ssl
 
 echo "Training Strategy 5: Hard Negative Mining"
@@ -29,6 +29,9 @@ echo "========================================="
 echo "All c23 strategies trained!"
 echo "========================================="
 
-# To resume training baseline strategy, run:
-CONFIG_DIR=configs/c23 python -m src.training.train_baseline \
-    --resume results/models/c23/strategy1_baseline/last_model.pth
+# To rerun self-supervised strategy (SimSiam), run:
+# CONFIG_DIR=configs/c23 python -m src.training.train_ssl
+# To resume Phase 1 from a saved checkpoint:
+# CONFIG_DIR=configs/c23 python -m src.training.train_ssl --resume-phase1 results/models/c23/strategy4_ssl/phase1_pretrained/phase1_resume.pth
+# To skip Phase 1 and resume Phase 2:
+# CONFIG_DIR=configs/c23 python -m src.training.train_ssl --resume results/models/c23/strategy4_ssl/last_model.pth
