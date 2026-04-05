@@ -339,6 +339,9 @@ def main():
         pretrained_path = config['phase_2'].get('pretrained_path')
     else:
         pretrained_path = pretrain_simsiam(config, device, resume_checkpoint=args.resume_phase1)
+        # If Phase 1 was disabled/skipped, fall back to the configured pretrained path
+        if pretrained_path is None:
+            pretrained_path = config['phase_2'].get('pretrained_path')
     finetune(config, pretrained_path, device, resume_checkpoint=args.resume)
 
 if __name__ == '__main__':
