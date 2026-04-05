@@ -37,7 +37,7 @@ phase_2:
   num_workers: 8
   augmentation: "baseline"
   freeze_backbone_epochs: 0
-  class_weight_real: 3.64  # 27581 fake / 7587 real — prevents collapse to all-fake
+  class_weight_real: 2.0  # reduced from 3.64 — original value caused oscillation/collapse
 
 # Paths
 save_dir: "results/models/c23/strategy4_ssl"
