@@ -241,6 +241,12 @@ def finetune(config, pretrained_path, device, resume_checkpoint=None):
         model_state.update(matched)
         model.model.load_state_dict(model_state, strict=False)
         print(f"Loaded {len(matched)} pretrained layers from {pretrained_path}")
+        # Reset BN running stats — Phase 1 stats are calibrated for SSL augmented data
+        # (color jitter, grayscale, blur), which causes eval-mode mismatch in Phase 2
+        for m in model.modules():
+            if isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d)):
+                m.reset_running_stats()
+        print("Reset BatchNorm running stats for Phase 2 adaptation")
 
     model = model.to(device)
     print(f"Model parameters: {model.get_num_parameters()/1e6:.2f}M")
