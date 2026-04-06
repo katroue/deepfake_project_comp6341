@@ -32,7 +32,9 @@
       "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nfrom src.training.base_trainer import BaseTrainer\nfrom src.training.train_ssl import pretrain_simclr\nprint\\('Imports OK'\\)\n\")",
       "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"from src.training.train_ssl import pretrain_simsiam, finetune; print\\('OK'\\)\")",
       "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport torch\nimport torch.nn as nn\n\ndevice = torch.device\\('mps'\\)\nbn = nn.BatchNorm1d\\(512, affine=False\\).to\\(device\\)\nx = torch.randn\\(96, 512\\).to\\(device\\)\ntry:\n    out = bn\\(x\\)\n    print\\('BatchNorm1d\\(affine=False\\) on MPS: OK'\\)\nexcept Exception as e:\n    print\\('ERROR:', e\\)\n\")",
-      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport torch\nckpt = torch.load\\('results/models/c23/strategy4_ssl/phase1_pretrained/phase1_resume.pth', map_location='cpu', weights_only=False\\)\nprint\\('Epoch completed:', ckpt['epoch'] + 1\\)\nprint\\('Loss:', ckpt['loss']\\)\nprint\\('NaN in backbone:', any\\(v.isnan\\(\\).any\\(\\).item\\(\\) for v in ckpt['backbone_state_dict'].values\\(\\)\\)\\)\n\")"
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python -c \"\nimport torch\nckpt = torch.load\\('results/models/c23/strategy4_ssl/phase1_pretrained/phase1_resume.pth', map_location='cpu', weights_only=False\\)\nprint\\('Epoch completed:', ckpt['epoch'] + 1\\)\nprint\\('Loss:', ckpt['loss']\\)\nprint\\('NaN in backbone:', any\\(v.isnan\\(\\).any\\(\\).item\\(\\) for v in ckpt['backbone_state_dict'].values\\(\\)\\)\\)\n\")",
+      "Bash(source .venv/bin/activate)",
+      "Bash(/Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341/.venv/bin/python scripts/run_evaluation.py --checkpoint results/models/c23/strategy4_ssl/best_model.pth --compression c23 --split test 2>&1)"
     ]
   }
 }
