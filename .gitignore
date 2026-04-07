@@ -15,6 +15,7 @@ venv/
 results/models/
 results/logs/**
 !results/logs/**/*.csv
+!results/logs/**/*.md
 
 # Kaggle
 kaggle_token.txt

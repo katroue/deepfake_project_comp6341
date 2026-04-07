@@ -19,3 +19,5 @@ epoch,train_loss,train_acc,val_loss,val_acc
 18,0.1829,92.12,0.5987,81.64
 19,0.1774,92.41,0.5745,82.93
 20,0.1736,92.52,1.7733,82.71
+
+kaggle kernels output katroue/deepfake-detection-notebook -p /Users/katherinedemers/Documents/GitHub/deepfake_project_comp6341
