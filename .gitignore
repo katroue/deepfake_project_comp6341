@@ -1,6 +1,7 @@
 # Dataset videos (download via data/download_script.py)
 data/original_sequences/
 data/manipulated_sequences/
+*.mp4
 
 # Python
 __pycache__/
@@ -10,6 +11,7 @@ dist/
 build/
 .venv/
 venv/
+*.pth
 
 # Model checkpoints and results
 results/models/

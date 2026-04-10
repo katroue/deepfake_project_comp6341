@@ -3,7 +3,7 @@ import numpy as np
 from collections import defaultdict
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, confusion_matrix
+    roc_auc_score, confusion_matrix, roc_curve
 )
 from tqdm import tqdm
 import json
@@ -81,7 +81,14 @@ def evaluate_model(model, dataloader, device, is_multitask=False):
         }
     metrics['per_manipulation'] = per_manip
 
+    fpr, tpr, thresholds = roc_curve(all_labels, all_probs)
+    metrics["roc_curve"] = {
+        "fpr": fpr.tolist(),
+        "tpr": tpr.tolist(),
+    }
+
     _print_results(metrics, cm)
+    
     return metrics
 
 
