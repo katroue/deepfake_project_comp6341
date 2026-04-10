@@ -28,3 +28,20 @@ python -m src.training.train_multitask
 echo "========================================="
 echo "All c23 strategies trained!"
 echo "========================================="
+
+
+echo "========================================="
+echo "Evaluation complete!"
+echo "========================================="
+
+# =========================================
+# VISUALIZATION — generate all charts
+# =========================================
+
+echo "Generating visualizations..."
+
+python scripts/visualize_results.py
+
+echo "========================================="
+echo "Done! Charts saved to results/visualizations/"
+echo "========================================="
